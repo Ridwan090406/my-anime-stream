@@ -1,10 +1,14 @@
 const express = require('express');
 const axios = require('axios');
+const path = require('path'); // 1. WAJIB ADA: Module Path
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // 2. WAJIB: Biar ikut port Vercel
 
+// 3. WAJIB: Set Path Absolut untuk Views & Public
+// (Tanpa ini, Vercel bingung nyari foldernya dimana)
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // BASE URL API
 const API_BASE = 'https://www.sankavollerei.com';
@@ -31,7 +35,7 @@ async function fetchAPI(endpoint) {
 app.get('/', async (req, res) => {
     try {
         const page = req.query.page || 1;
-        
+
         const [ongoingRes, completedRes] = await Promise.all([
             axios.get(`${API_BASE}/anime/ongoing-anime?page=${page}`, AXIOS_OPTIONS),
             axios.get(`${API_BASE}/anime/complete-anime?page=${page}`, AXIOS_OPTIONS)
@@ -48,14 +52,11 @@ app.get('/', async (req, res) => {
 
 // 2. JADWAL RILIS
 app.get('/schedule', async (req, res) => {
-    // Karena JSON root-nya langsung berisi array di dalam 'data'
-    // dan fetchAPI kita sudah mengembalikan response.data.data
     const schedule = await fetchAPI('/anime/schedule');
-    
-    // Kirim ke view
     res.render('schedule', { schedule: schedule || [] });
 });
-// 3. PENCARIAN (FIX SPASI)
+
+// 3. PENCARIAN
 app.get('/search', async (req, res) => {
     let query = req.query.q;
     if (!query) return res.redirect('/');
@@ -77,12 +78,10 @@ app.get('/genre/:slug', async (req, res) => {
     res.render('genre', { results, genre: slug, page: parseInt(page) });
 });
 
-// 5. LIBRARY (DAFTAR ISI A-Z)
+// 5. LIBRARY
 app.get('/library', async (req, res) => {
-    // Menggunakan endpoint /anime/list untuk mendapatkan daftar A-Z
     const data = await fetchAPI('/anime/unlimited');
-    // Biasanya datanya ada di properti 'list' atau langsung array
-    const library = data?.list || data || []; 
+    const library = data?.list || data || [];
     res.render('library', { library });
 });
 
@@ -99,42 +98,32 @@ app.get('/watch/:slug', async (req, res) => {
     const data = await fetchAPI(`/anime/episode/${slug}`);
     res.render('watch', { video: data });
 });
-// 8. AMBIL URL VIDEO PER SERVER (Untuk Ganti Kualitas)
+
+// 8. AMBIL URL VIDEO PER SERVER
 app.get('/get-stream/:serverId', async (req, res) => {
     const serverId = req.params.serverId;
     console.log(`⏳ Request Link Server: ${serverId}`);
-    
-    // Panggil endpoint /anime/server/:serverId
     const data = await fetchAPI(`/anime/server/${serverId}`);
-    
-    // Kirim hasil (berupa URL) balik ke browser
-    res.json(data); 
+    res.json(data);
 });
-// 9. HALAMAN RIWAYAT NONTON (HISTORY)
+
+// 9. HISTORY
 app.get('/history', (req, res) => {
-    // Kita render halaman history.ejs
-    // Datanya nanti diambil oleh browser (Client-side) dari LocalStorage
     res.render('history');
 });
-// 10. HALAMAN BOOKMARK (FAVORIT)
+
+// 10. BOOKMARK
 app.get('/bookmark', (req, res) => {
     res.render('bookmark');
 });
-// 11. HALAMAN DOWNLOAD BATCH
+
+// 11. DOWNLOAD BATCH
 app.get('/batch/:slug', async (req, res) => {
     const slug = req.params.slug;
-    
-    // Kita coba tebak slug batch-nya. 
-    // Biasanya slug anime: "judul-anime-sub-indo"
-    // Slug batch seringkali: "judul-anime-batch-sub-indo"
-    // Jadi kita coba request ke API dengan slug itu.
-    
     console.log(`⏳ Mencari Batch: ${slug}`);
-    
-    // Coba pola 1: Langsung slug (siapa tau dikirim slug batch)
+
     let data = await fetchAPI(`/anime/batch/${slug}`);
-    
-    // Jika null, coba pola 2: Tambahkan kata "-batch" sebelum "-sub-indo"
+
     if (!data && slug.includes('-sub-indo')) {
         const batchSlug = slug.replace('-sub-indo', '-batch-sub-indo');
         console.log(`⏳ Mencari Batch Pola 2: ${batchSlug}`);
@@ -143,17 +132,18 @@ app.get('/batch/:slug', async (req, res) => {
 
     res.render('batch', { batch: data, slug: slug });
 });
-// 404 HANDLER (JIKA ROUTE TIDAK DITEMUKAN)
+
+// 404 HANDLER
 app.use((req, res) => {
     res.status(404).render('404');
 });
 
-// SERVER LISTEN (Ini yang tadi mungkin hilang)
+// SERVER LISTEN (DUAL MODE: LOCAL & VERCEL)
 if (require.main === module) {
-    app.listen(port, () => {
-        console.log(`Server berjalan di http://localhost:${port}`);
+    app.listen(PORT, () => {
+        console.log(`Server berjalan di http://localhost:${PORT}`);
     });
 }
 
-// 2. Export app supaya bisa dibaca Vercel
+// 4. WAJIB: Export app untuk Vercel
 module.exports = app;
