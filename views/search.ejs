@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cari: <%= query %></title>
+</head>
+<body class="text-gray-200 min-h-screen flex flex-col font-sans selection:bg-neon-pink selection:text-white">
+
+    <%- include('partials/header') %>
+
+    <div class="container mx-auto px-4 py-8 flex-grow relative z-10">
+        <h2 class="text-2xl font-bold mb-6 text-gray-300">
+            Hasil Pencarian: "<span class="text-neon-cyan border-b-2 border-neon-cyan"><%= query %></span>"
+        </h2>
+
+        <% if (results && results.length > 0) { %> <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <% results.forEach(item => { %> <a href="/detail/<%= item.animeId %>" class="group block glass rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-neon-purple hover:border-neon-purple/50 border border-white/5 relative">
+                        
+                        <div class="relative pb-[140%] overflow-hidden">
+                            <img src="<%= item.poster %>" class="absolute top-0 left-0 w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                            
+                            <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/80 to-transparent p-3 pt-8"> <h3 class="text-sm font-bold text-white truncate group-hover:text-neon-purple transition"><%= item.title %></h3>
+                                <p class="text-xs text-neon-cyan font-medium"><%= item.status %></p>
+                            </div>
+                        </div>
+                    </a>
+                <% }) %>
+            </div>
+        <% } else { %>
+            <div class="glass flex flex-col items-center justify-center py-20 rounded-xl border border-white/5 text-center px-4">
+                <div class="text-6xl mb-4 grayscale opacity-50">😢</div>
+                <p class="text-2xl text-neon-pink font-bold mb-2">Anime tidak ditemukan</p> <p class="text-gray-400 mb-6 max-w-md">Mungkin salah ketik? Coba gunakan kata kunci lain seperti "Naruto" atau "One Piece".</p>
+                <a href="/" class="px-6 py-2 bg-neon-purple hover:bg-neon-purple/80 text-white rounded-full transition shadow-neon-purple">Kembali ke Home</a>
+            </div>
+        <% } %>
+    </div>
+    <%- include('partials/footer') %>
+</body>
+</html>

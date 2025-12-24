@@ -1,0 +1,138 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MyStream Cyberpunk</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // --- PALET WARNA CYBERPUNK ---
+                        cyber: {
+                            dark: '#0a0f1d',    // Background Paling Belakang (Deep Navy)
+                            card: '#151c30',    // Warna Kartu/Box
+                            cardhover: '#1c2541', // Warna Kartu saat disorot
+                            border: '#2a3454',  // Garis tepi tipis
+                        },
+                        neon: {
+                            purple: '#8b5cf6',  // UNGU NEON (Warna Utama)
+                            pink: '#ec4899',    // PINK NEON (Aksen Sekunder)
+                            cyan: '#06b6d4',    // CYAN NEON (Highlights)
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        // Efek Cahaya Neon (Glow)
+                        'neon-purple': '0 0 20px rgba(139, 92, 246, 0.5)',
+                        'neon-pink': '0 0 20px rgba(236, 72, 153, 0.5)',
+                        'neon-cyan': '0 0 20px rgba(6, 182, 212, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            /* Background dengan sedikit gradasi halus biar tidak flat */
+            background: radial-gradient(circle at top center, #1a2238 0%, #0a0f1d 100%);
+            background-attachment: fixed;
+        }
+        /* Scrollbar Keren */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0f1d; }
+        ::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 10px; }
+        
+        /* Efek Kaca (Glass) */
+        .glass {
+            background: rgba(21, 28, 48, 0.7); /* Warna card transparan */
+            backdrop-filter: blur(10px); /* Efek buram di belakangnya */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Garis tipis mengkilap */
+        }
+    </style>
+</head>
+
+<body class="text-gray-200 min-h-screen flex flex-col">
+
+<nav class="glass sticky top-0 z-40 border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.3)]">
+    <div class="container mx-auto flex flex-row justify-between items-center p-4 gap-4">
+        
+        <a href="/" class="text-2xl font-extrabold tracking-wider flex items-center gap-2">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-neon-purple to-neon-pink">
+                MYSTREAM
+            </span>
+            <span class="text-xs bg-neon-purple/20 text-neon-purple border border-neon-purple px-2 py-0.5 rounded hidden md:inline-block">CYBER</span>
+        </a>
+        
+        <div class="hidden md:flex gap-6 text-sm font-semibold">
+            <a href="/" class="hover:text-neon-cyan transition">Home</a>
+            <a href="/list" class="hover:text-neon-cyan transition">Library</a>
+            <a href="/schedule" class="hover:text-neon-cyan transition">Jadwal</a>
+            <a href="/history" class="hover:text-neon-cyan transition">Riwayat</a>
+            <a href="/bookmark" class="hover:text-neon-pink transition">Favorit</a>
+        </div>
+
+        <form action="/search" method="GET" class="hidden md:flex w-1/3 group relative">
+            <div class="absolute inset-0 bg-gradient-to-r from-neon-purple to-neon-pink rounded-lg blur opacity-25 group-hover:opacity-50 transition"></div>
+            <input type="text" name="q" placeholder="Cari anime..." required
+                class="relative w-full bg-cyber-card text-white px-4 py-2 rounded-l-lg border border-cyber-border focus:outline-none focus:border-neon-purple transition placeholder-gray-500">
+            <button type="submit" class="relative bg-neon-purple hover:bg-neon-purple/80 text-white px-4 py-2 rounded-r-lg transition">🔍</button>
+        </form>
+
+        <button onclick="toggleSearch()" class="md:hidden text-gray-300 hover:text-neon-cyan transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </button>
+    </div>
+</nav>
+
+<style>
+    /* Tambahkan padding bawah di body agar konten tidak tertutup menu HP */
+    body { padding-bottom: 0px; } 
+    /* Padding diatur oleh div spacer di footer.ejs */
+    
+    /* Loading Bar Warna Biru */
+    #nprogress .bar { background: #3b82f6 !important; height: 3px !important; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+<script>
+    // Konfigurasi: hilangkan lingkaran spinner, cukup bar saja
+    NProgress.configure({ showSpinner: false });
+
+    // Fungsi mulai loading (dipanggil saat form submit)
+    function startLoading() {
+        NProgress.start();
+    }
+
+    // Deteksi saat user klik link apapun
+    document.addEventListener('click', function(e) {
+        // Cek apakah yang diklik adalah link <a>
+        const link = e.target.closest('a');
+        
+        // Jika link internal (bukan target="_blank" atau javascript:), jalankan loading
+        if (link && link.href && !link.href.startsWith('javascript') && link.target !== '_blank') {
+            NProgress.start();
+        }
+    });
+
+    // Matikan loading saat halaman selesai dimuat (jika user tekan back button)
+    window.addEventListener('pageshow', function() {
+        NProgress.done();
+    });
+</script>
+
+<style>
+    /* Ubah warna Loading Bar jadi Biru (sesuai tema) */
+    #nprogress .bar { background: #3b82f6 !important; height: 3px !important; }
+    #nprogress .peg { box-shadow: 0 0 10px #3b82f6, 0 0 5px #3b82f6 !important; }
+</style>

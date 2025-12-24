@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Nonton - MyStream Cyber</title>
+</head>
+<body class="text-gray-200 min-h-screen flex flex-col font-sans selection:bg-neon-pink selection:text-white">
+
+    <%- include('partials/header') %>
+
+    <div class="container mx-auto px-4 py-8 flex-grow relative z-10">
+        <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+            <h1 class="text-3xl font-bold flex items-center gap-2 text-white">
+                <span class="text-neon-cyan">⏳</span> Riwayat Nonton
+            </h1>
+            <button onclick="clearHistory()" class="bg-cyber-card hover:bg-red-600 text-red-400 hover:text-white border border-red-500/50 px-4 py-2 rounded-lg text-sm font-bold transition shadow-lg hover:shadow-red-500/50">
+                Hapus Semua </button>
+        </div>
+
+        <div id="history-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            </div>
+
+        <div id="empty-msg" class="hidden glass rounded-xl text-center py-20 text-gray-500 border border-white/5">
+            <p class="text-xl mb-2">Belum ada riwayat nonton.</p> <a href="/" class="text-neon-purple font-semibold hover:underline decoration-wavy">Mulai Nonton Anime</a>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory(); [cite_start]// [cite: 39]
+        });
+
+        function loadHistory() {
+            const container = document.getElementById('history-container');
+            const emptyMsg = document.getElementById('empty-msg');
+            
+            const history = JSON.parse(localStorage.getItem('myStream_history')) || []; [cite_start]// [cite: 40-41]
+
+            if (history.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            // Render HTML Card dengan gaya Cyberpunk Glass
+            let html = '';
+            [cite_start]history.forEach(item => { // [cite: 43]
+                const date = new Date(item.date);
+                const dateStr = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) + ' ' + date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                html += `
+                    <a href="${item.link}?poster=${encodeURIComponent(item.poster)}" class="glass rounded-xl p-3 flex gap-4 hover:bg-neon-purple/10 transition border border-white/5 hover:border-neon-purple/50 group relative overflow-hidden">
+                        
+                        <div class="flex-shrink-0 w-20 h-28 overflow-hidden rounded-lg border border-white/10">
+                            <img src="${item.poster}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" onerror="this.src='https://via.placeholder.com/80x112?text=Anime'"> </div>
+                        
+                        <div class="flex flex-col justify-between py-1 w-full overflow-hidden relative z-10">
+                            <div>
+                                <h3 class="font-bold text-sm md:text-base leading-tight mb-1 text-gray-200 group-hover:text-neon-cyan transition line-clamp-2">
+                                    ${item.title} </h3>
+                                <p class="text-xs text-gray-500 flex items-center gap-1">
+                                    <span>🕒</span> ${dateStr}
+                                </p>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <span class="text-xs bg-neon-purple hover:bg-neon-purple/80 text-white px-3 py-1.5 rounded-md shadow-neon-purple transition">
+                                    Lanjut Nonton ▶ </span>
+                            </div>
+                        </div>
+
+                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-neon-purple/5 opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                    </a>
+                `;
+            });
+
+            container.innerHTML = html; [cite_start]// [cite: 50]
+        }
+
+        function clearHistory() {
+            if (confirm('Yakin ingin menghapus semua riwayat?')) {
+                localStorage.removeItem('myStream_history');
+                loadHistory(); [cite_start]// [cite: 51]
+            }
+        }
+    </script>
+</body>
+</html>

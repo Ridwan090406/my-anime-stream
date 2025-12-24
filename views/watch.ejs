@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nonton <%= video.title %> - MyStream Cyber</title>
+</head>
+<body class="text-gray-200 min-h-screen flex flex-col font-sans selection:bg-neon-pink selection:text-white">
+
+    <%- include('partials/header') %>
+
+    <% const posterUrl = typeof poster !== 'undefined' ? poster : ''; %>
+    <div class="fixed top-0 left-0 w-full h-96 z-[-1] opacity-20 pointer-events-none">
+        <img src="<%= posterUrl %>" class="w-full h-full object-cover blur-3xl">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-cyber-dark"></div>
+    </div>
+
+    <div class="container mx-auto px-4 py-6 flex-grow relative z-10">
+        
+        <div class="mb-4 text-sm text-gray-400">
+            <a href="/" class="hover:text-neon-cyan transition">Home</a>
+            <span class="mx-2">/</span>
+            <a href="/detail/<%= video.animeId %>" class="hover:text-neon-cyan transition">Anime Detail</a>
+            <span class="mx-2">/</span>
+            <span class="text-neon-purple font-semibold">Nonton</span>
+        </div>
+
+        <div class="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-[0_0_30px_rgba(139,92,246,0.3)] border border-neon-purple/30 mb-6 group">
+             <iframe id="video-frame" 
+    src="<%= video.defaultStreamingUrl %>" 
+    class="w-full h-full" 
+    frameborder="0" 
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+    referrerpolicy="origin" 
+    allowfullscreen>
+</iframe>  
+        <div id="loading-overlay" class="absolute inset-0 bg-black flex flex-col items-center justify-center z-20">
+                <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-neon-purple mb-4"></div>
+                <p class="text-neon-cyan animate-pulse">Memuat Stream...</p>
+            </div>
+        </div>
+
+        <div class="glass p-5 rounded-xl border border-white/5 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-lg md:text-xl font-bold text-gray-100 text-center md:text-left flex-1">
+                <%= video.title %>
+            </h1>
+            
+            <div class="flex gap-3 shrink-0">
+                <% if (video.hasPrevEpisode && video.prevEpisode) { %>
+                    <a href="/watch/<%= video.prevEpisode.episodeId %>?poster=<%= encodeURIComponent(posterUrl) %>" 
+                       class="bg-cyber-card hover:bg-neon-purple hover:text-white border border-cyber-border text-gray-300 px-4 py-2 rounded-lg transition text-sm flex items-center gap-2">
+                        ⬅️ Prev
+                    </a>
+                <% } else { %>
+                    <button disabled class="bg-gray-800 text-gray-600 px-4 py-2 rounded-lg text-sm cursor-not-allowed border border-gray-700">Prev</button>
+                <% } %>
+
+                <a href="#episode-list" class="bg-neon-purple hover:bg-neon-purple/80 text-white px-4 py-2 rounded-lg transition text-sm shadow-neon-purple">
+                    List Eps ⬇️
+                </a>
+
+                <% if (video.hasNextEpisode && video.nextEpisode) { %>
+                    <a href="/watch/<%= video.nextEpisode.episodeId %>?poster=<%= encodeURIComponent(posterUrl) %>" 
+                       class="bg-cyber-card hover:bg-neon-purple hover:text-white border border-cyber-border text-gray-300 px-4 py-2 rounded-lg transition text-sm flex items-center gap-2">
+                        Next ➡️
+                    </a>
+                <% } else { %>
+                    <button disabled class="bg-gray-800 text-gray-600 px-4 py-2 rounded-lg text-sm cursor-not-allowed border border-gray-700">Next</button>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="glass p-6 rounded-xl border border-white/5 mb-8">
+            <h3 class="text-neon-cyan font-bold mb-4 flex items-center gap-2">
+                📡 Pilih Server & Kualitas
+            </h3>
+            
+            <div class="space-y-4">
+                <% if (video.server && video.server.qualities) { %>
+                    <% video.server.qualities.forEach(quality => { %>
+                        <% if (quality.serverList && quality.serverList.length > 0) { %>
+                            <div class="border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                                <span class="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-wider"><%= quality.title %></span>
+                                <div class="flex flex-wrap gap-2">
+                                    <% quality.serverList.forEach(srv => { %>
+                                        <a href="/watch/<%= video.episodeId || '' %>?server=<%= srv.serverId %>" 
+                                            class="relative overflow-hidden bg-cyber-card hover:bg-neon-cyan/10 border border-cyber-border hover:border-neon-cyan text-gray-300 hover:text-neon-cyan px-4 py-2 rounded text-xs transition duration-300 group">
+                                            <span class="relative z-10 font-medium"><%= srv.title %></span>
+                                        </a>
+                                    <% }) %>
+                                </div>
+                            </div>
+                        <% } %>
+                    <% }) %>
+                <% } else { %>
+                    <p class="text-gray-500 text-sm">Server alternatif tidak tersedia.</p>
+                <% } %>
+            </div>
+        </div>
+
+        <div id="episode-list" class="glass p-6 rounded-xl border border-white/5 mb-8">
+            <h3 class="text-neon-pink font-bold mb-4 flex items-center gap-2">
+                📺 Episode Lainnya
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 max-h-80 overflow-y-auto custom-scroll pr-2">
+                <% if (video.info && video.info.episodeList) { %>
+                    <% video.info.episodeList.forEach(eps => { %>
+                        <a href="/watch/<%= eps.episodeId %>?poster=<%= encodeURIComponent(posterUrl) %>" 
+                           class="group relative bg-cyber-card hover:bg-neon-purple/20 border border-cyber-border hover:border-neon-purple py-2 px-3 rounded text-center transition overflow-hidden">
+                            <span class="block text-xs text-gray-300 group-hover:text-white truncate relative z-10">
+                                <%= eps.title.replace('Subtitle Indonesia', '').trim() %>
+                            </span>
+                            <% if (video.episodeId === eps.episodeId) { %>
+                                <div class="absolute inset-0 border-2 border-neon-cyan rounded pointer-events-none"></div>
+                            <% } %>
+                        </a>
+                    <% }) %>
+                <% } else { %>
+                    <div class="col-span-full text-center text-gray-500">Gagal memuat list episode.</div>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="glass p-6 rounded-xl border border-white/5">
+            <h3 class="text-white font-bold mb-6 flex items-center gap-2">
+                💬 Diskusi
+            </h3>
+            <div id="disqus_thread"></div>
+        </div>
+
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        // AUTO HIDE LOADING AWAL
+        const iframe = document.getElementById('video-frame');
+        iframe.onload = function() {
+            const overlay = document.getElementById('loading-overlay');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }, 1000); // Delay dikit biar mulus
+        };
+
+        // DISQUS CONFIG
+        var disqus_config = function () {
+            this.page.url = window.location.href;  
+            this.page.identifier = window.location.pathname; 
+        };
+        (function() { 
+            var d = document, s = d.createElement('script');
+            s.src = 'https://mystream-anime.disqus.com/embed.js'; // Pastikan shortname sesuai
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        })();
+    </script>
+</body>
+</html>

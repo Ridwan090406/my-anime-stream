@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyStream</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<%- include('partials/header') %>
+<body class=" text-white font-sans min-h-screen pb-10">
+
+       <div class="container mx-auto px-4">
+        
+        <h2 class="text-2xl font-bold mb-4 flex items-center">🔥 Sedang Tayang</h2>
+        
+        <% if (ongoing.length > 0) { %>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-10">
+                <% ongoing.forEach(item => { %>
+                    <a href="/detail/<%= item.animeId %>" class="group block glass rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-neon-purple hover:border-neon-purple/50 relative">
+                        <img src="<%= item.poster %>" class="w-full h-60 object-cover" alt="Poster">
+                        <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-80 p-2">
+                            <h3 class="text-sm font-bold truncate"><%= item.title %></h3>
+                            <p class="text-xs text-yellow-400">Episode <%= item.episodes %></p>
+                        </div>
+                    </a>
+                <% }) %>
+            </div>
+        <% } else { %>
+            <p class="text-gray-500 mb-10">Data Ongoing kosong.</p>
+        <% } %>
+
+        <h2 class="text-2xl font-bold mb-4 flex items-center">✅ Sudah Tamat</h2>
+
+        <% if (completed.length > 0) { %>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <% completed.forEach(item => { %>
+                    <a href="/detail/<%= item.animeId %>" class="group block glass rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-neon-purple hover:border-neon-purple/50 relative">
+                        <img src="<%= item.poster %>" class="w-full h-60 object-cover opacity-80 group-hover:opacity-100" alt="Poster">
+                        <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-80 p-2">
+                            <h3 class="text-sm font-bold truncate"><%= item.title %></h3>
+                            <span class="text-xs bg-green-600 px-1 rounded"><%= item.episodes %> Eps</span>
+                        </div>
+                    </a>
+                <% }) %>
+            </div>
+        <% } else { %>
+            <p class="text-gray-500">Data Completed kosong.</p>
+        <% } %>
+
+    </div>
+    <div class="container mx-auto px-4 py-6 flex justify-center gap-4 border-t border-gray-800 mt-8">
+        <% if (locals.page && page > 1) { %>
+            <a href="/?page=<%= page - 1 %>" class="bg-gray-700 hover:bg-blue-600 px-6 py-2 rounded-full font-bold transition">&larr; Prev Page</a>
+        <% } %>
+        
+        <a href="/?page=<%= (locals.page || 1) + 1 %>" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-full font-bold transition">Next Page &rarr;</a>
+    </div>
+<%- include('partials/footer') %>
+  </body>
+</html>

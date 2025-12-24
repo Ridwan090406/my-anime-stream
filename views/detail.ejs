@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= anime.title %> - MyStream Cyber</title>
+</head>
+<body class="text-gray-200 min-h-screen flex flex-col font-sans selection:bg-neon-pink selection:text-white">
+
+    <%- include('partials/header') %>
+
+    <div class="fixed top-0 left-0 w-full h-96 z-[-1] opacity-20 pointer-events-none">
+        <img src="<%= anime.poster %>" class="w-full h-full object-cover blur-3xl">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-cyber-dark"></div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 flex-grow relative z-10">
+        
+        <div class="glass rounded-2xl p-6 md:p-8 mb-8 border border-white/5 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-neon-purple/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="flex-shrink-0 mx-auto md:mx-0 w-64 group perspective">
+                    <div class="relative rounded-xl overflow-hidden shadow-[0_0_30px_rgba(139,92,246,0.2)] border border-white/10 group-hover:shadow-neon-purple transition duration-500 transform group-hover:rotate-1">
+                        <img src="<%= anime.poster %>" class="w-full h-auto object-cover transform group-hover:scale-110 transition duration-700">
+                        <% if (anime.score) { %>
+                            <div class="absolute top-2 right-2 bg-black/70 backdrop-blur text-neon-cyan border border-neon-cyan/30 px-2 py-1 rounded text-xs font-bold shadow-lg">
+                                ⭐ <%= anime.score %>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <div class="flex-1">
+                    <h1 class="text-2xl md:text-4xl font-extrabold mb-4 leading-tight bg-clip-text text-transparent bg-gradient-to-r from-neon-cyan via-white to-neon-purple">
+                        <%= anime.title %>
+                    </h1>
+
+                    <div class="flex flex-wrap gap-3 mb-6">
+                        <button id="btn-bookmark" onclick="toggleBookmark()" 
+                            class="relative overflow-hidden bg-cyber-card border border-cyber-border hover:border-neon-pink text-gray-300 hover:text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition duration-300 group shadow-lg">
+                            <span class="group-hover:scale-125 transition duration-300 text-neon-pink">❤️</span> 
+                            <span id="text-bookmark" class="font-semibold text-sm relative z-10">Favorit</span>
+                        </button>
+
+                        <a href="/batch/<%= anime.animeId %>" 
+                           class="relative overflow-hidden bg-cyber-card border border-cyber-border hover:border-neon-cyan text-gray-300 hover:text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition duration-300 group shadow-lg">
+                            <span class="text-neon-cyan group-hover:rotate-12 transition">📦</span> 
+                            <span class="font-semibold text-sm relative z-10">Download Batch</span>
+                        </a>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm text-gray-400 mb-6 bg-cyber-dark/50 p-4 rounded-xl border border-white/5">
+                        <p><span class="text-neon-purple font-semibold">Status:</span> <%= anime.status %></p>
+                        <p><span class="text-neon-purple font-semibold">Studio:</span> <%= anime.studios || '-' %></p>
+                        <p><span class="text-neon-purple font-semibold">Rilis:</span> <%= anime.aired || '-' %></p>
+                        <p><span class="text-neon-purple font-semibold">Durasi:</span> <%= anime.duration || '-' %></p>
+                        <p class="md:col-span-2"><span class="text-neon-purple font-semibold">Genre:</span> 
+                            <% if (anime.genreList && anime.genreList.length > 0) { %>
+                                <% anime.genreList.forEach(g => { %>
+                                    <a href="/genre/<%= g.genreId %>" class="hover:text-neon-cyan transition underline decoration-dotted"><%= g.title %></a>, 
+                                <% }) %>
+                            <% } else { %> - <% } %>
+                        </p>
+                    </div>
+
+                    <div class="prose prose-invert max-w-none">
+                        <h3 class="text-lg font-bold text-neon-cyan mb-2 flex items-center gap-2">
+                            📝 Sinopsis
+                        </h3>
+                        <div class="text-gray-300 text-sm leading-relaxed opacity-90 text-justify space-y-4">
+                            <% if (anime.synopsis && anime.synopsis.paragraphs) { %>
+                                <% anime.synopsis.paragraphs.forEach(paragraph => { %>
+                                    <p><%= paragraph %></p>
+                                <% }) %>
+                            <% } else if (typeof anime.synopsis === 'string') { %>
+                                <p><%= anime.synopsis %></p>
+                            <% } else { %>
+                                <p>Sinopsis tidak tersedia.</p>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass rounded-2xl p-6 border border-white/5 relative">
+            <h3 class="text-xl font-bold mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
+                <span class="bg-neon-purple w-2 h-8 rounded-full shadow-[0_0_10px_#8b5cf6]"></span>
+                📺 Daftar Episode
+                <span class="text-xs font-normal text-gray-500 ml-auto bg-cyber-dark px-2 py-1 rounded border border-white/10">
+                    Total: <%= anime.episodeList ? anime.episodeList.length : 0 %> Eps
+                </span>
+            </h3>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scroll">
+                <% if (anime.episodeList && anime.episodeList.length > 0) { %>
+                    <% anime.episodeList.forEach(eps => { %>
+                        <a href="/watch/<%= eps.episodeId %>?poster=<%= encodeURIComponent(anime.poster) %>" 
+                           class="group relative bg-cyber-card hover:bg-neon-purple/20 border border-cyber-border hover:border-neon-purple text-center py-3 px-3 rounded-lg transition duration-300 overflow-hidden">
+                            
+                            <span class="block text-xs font-medium text-gray-400 mb-1">Eps <%= eps.eps %></span>
+                            <span class="block text-sm font-semibold text-gray-200 group-hover:text-white truncate relative z-10 transition-colors">
+                                <%= eps.title.replace(anime.title, '').replace('Subtitle Indonesia', '').trim() || ('Episode ' + eps.eps) %>
+                            </span>
+
+                            <div class="absolute inset-0 bg-neon-purple/20 opacity-0 group-hover:opacity-100 blur-xl transition duration-300"></div>
+                        </a>
+                    <% }) %>
+                <% } else { %>
+                    <p class="text-gray-500 col-span-full text-center py-10">Belum ada episode tersedia.</p>
+                <% } %>
+            </div>
+        </div>
+
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        const animeData = {
+            id: "<%= anime.animeId %>", // Pastikan ID ini terisi dari controller
+            title: "<%= anime.title %>",
+            poster: "<%= anime.poster %>",
+            link: "/detail/<%= anime.animeId %>"
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkBookmarkStatus();
+        });
+
+        function getBookmarks() {
+            return JSON.parse(localStorage.getItem('myStream_bookmarks')) || [];
+        }
+
+        function checkBookmarkStatus() {
+            const bookmarks = getBookmarks();
+            // Cek ID, jika animeId kosong (mungkin undefined di controller), gunakan Judul sebagai ID sementara
+            const currentId = animeData.id || animeData.title; 
+            
+            const isExist = bookmarks.some(item => item.id === currentId);
+            const btn = document.getElementById('btn-bookmark');
+            const txt = document.getElementById('text-bookmark');
+
+            if (isExist) {
+                btn.classList.add('border-neon-pink', 'bg-neon-pink/10');
+                btn.classList.remove('border-cyber-border');
+                btn.querySelector('span').classList.remove('text-neon-pink');
+                txt.innerText = "Hapus Favorit";
+                txt.classList.add('text-neon-pink');
+            } else {
+                btn.classList.remove('border-neon-pink', 'bg-neon-pink/10');
+                btn.classList.add('border-cyber-border');
+                btn.querySelector('span').classList.add('text-neon-pink');
+                txt.innerText = "Favorit";
+                txt.classList.remove('text-neon-pink');
+            }
+        }
+
+        function toggleBookmark() {
+            let bookmarks = getBookmarks();
+            const currentId = animeData.id || animeData.title;
+
+            const isExist = bookmarks.some(item => item.id === currentId);
+
+            if (isExist) {
+                bookmarks = bookmarks.filter(item => item.id !== currentId);
+            } else {
+                bookmarks.push({
+                    id: currentId,
+                    title: animeData.title,
+                    poster: animeData.poster,
+                    link: animeData.link || window.location.pathname,
+                    date: new Date().getTime()
+                });
+            }
+            localStorage.setItem('myStream_bookmarks', JSON.stringify(bookmarks));
+            checkBookmarkStatus();
+        }
+    </script>
+</body>
+</html>
