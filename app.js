@@ -149,7 +149,11 @@ app.use((req, res) => {
 });
 
 // SERVER LISTEN (Ini yang tadi mungkin hilang)
-app.listen(PORT, () => {
-    console.log(`🚀 Server Full Feature berjalan di http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    app.listen(port, () => {
+        console.log(`Server berjalan di http://localhost:${port}`);
+    });
+}
+
+// 2. Export app supaya bisa dibaca Vercel
 module.exports = app;
