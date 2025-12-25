@@ -26,15 +26,15 @@
         </div>
 
         <div class="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-[0_0_30px_rgba(139,92,246,0.3)] border border-neon-purple/30 mb-6 group">
-             <iframe id="video-frame" 
-    src="<%= video.defaultStreamingUrl %>" 
-    class="w-full h-full" 
-    frameborder="0" 
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-    referrerpolicy="origin" 
-    allowfullscreen>
-</iframe>  
-        <div id="loading-overlay" class="absolute inset-0 bg-black flex flex-col items-center justify-center z-20">
+            <iframe id="video-frame" 
+                src="<%= video.defaultStreamingUrl %>" 
+                class="w-full h-full" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                referrerpolicy="origin" 
+                allowfullscreen>
+            </iframe>
+            <div id="loading-overlay" class="absolute inset-0 bg-black flex flex-col items-center justify-center z-20">
                 <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-neon-purple mb-4"></div>
                 <p class="text-neon-cyan animate-pulse">Memuat Stream...</p>
             </div>
@@ -83,10 +83,10 @@
                                 <span class="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-wider"><%= quality.title %></span>
                                 <div class="flex flex-wrap gap-2">
                                     <% quality.serverList.forEach(srv => { %>
-                                        <a href="/watch/<%= video.episodeId || '' %>?server=<%= srv.serverId %>" 
+                                        <button onclick="changeServer('<%= srv.serverId %>')" 
                                             class="relative overflow-hidden bg-cyber-card hover:bg-neon-cyan/10 border border-cyber-border hover:border-neon-cyan text-gray-300 hover:text-neon-cyan px-4 py-2 rounded text-xs transition duration-300 group">
                                             <span class="relative z-10 font-medium"><%= srv.title %></span>
-                                        </a>
+                                        </button>
                                     <% }) %>
                                 </div>
                             </div>
@@ -115,42 +115,107 @@
                             <% } %>
                         </a>
                     <% }) %>
-                <% } else { %>
-                    <div class="col-span-full text-center text-gray-500">Gagal memuat list episode.</div>
                 <% } %>
             </div>
         </div>
 
         <div class="glass p-6 rounded-xl border border-white/5">
-            <h3 class="text-white font-bold mb-6 flex items-center gap-2">
-                💬 Diskusi
-            </h3>
+            <h3 class="text-white font-bold mb-6 flex items-center gap-2">💬 Diskusi</h3>
             <div id="disqus_thread"></div>
         </div>
-
     </div>
 
     <%- include('partials/footer') %>
 
     <script>
-        // AUTO HIDE LOADING AWAL
+        // 1. DATA VIDEO (Diisi oleh Server EJS)
+        const currentVideoData = {
+            id: "<%= video.animeId || video.title %>", // ID Unik
+            title: "<%= video.title %>",
+            poster: "<%= posterUrl %>",
+            link: window.location.pathname, // Link halaman ini
+            date: new Date().toISOString() // Waktu sekarang
+        };
+
+        // 2. FUNGSI SIMPAN HISTORY (PENTING!!)
+        function saveToHistory() {
+            try {
+                // Ambil data lama
+                let history = JSON.parse(localStorage.getItem('myStream_history')) || [];
+
+                // Cek apakah video ini sudah ada? Kalau ada, hapus dulu (biar nanti ditaruh di paling atas/terbaru)
+                history = history.filter(item => item.id !== currentVideoData.id);
+
+                // Masukkan video ini ke urutan pertama (unshift)
+                history.unshift(currentVideoData);
+
+                // Batasi cuma simpan 50 riwayat terakhir (supaya HP gak berat)
+                if (history.length > 50) {
+                    history.pop();
+                }
+
+                // Simpan balik ke Browser
+                localStorage.setItem('myStream_history', JSON.stringify(history));
+                
+                console.log("✅ Riwayat tersimpan:", currentVideoData.title);
+            } catch (e) {
+                console.error("Gagal simpan history:", e);
+            }
+        }
+
+        // 3. JALANKAN SAAT HALAMAN SELESAI DIMUAT
+        document.addEventListener('DOMContentLoaded', () => {
+            saveToHistory();
+        });
+
+        // 4. SCRIPT GANTI SERVER (AJAX)
+        async function changeServer(serverId) {
+            const iframe = document.getElementById('video-frame');
+            const overlay = document.getElementById('loading-overlay');
+            
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            try {
+                // Minta link baru ke server kita sendiri (/get-stream)
+                const response = await fetch(`/get-stream/${serverId}`);
+                const data = await response.json();
+                
+                if (data && data.url) {
+                    iframe.src = data.url;
+                } else {
+                    alert('Gagal mengambil link server.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Terjadi kesalahan saat ganti server.');
+            }
+
+            // Simulasi loading
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }, 1000);
+        }
+
+        // 5. AUTO HIDE LOADING AWAL
         const iframe = document.getElementById('video-frame');
         iframe.onload = function() {
             const overlay = document.getElementById('loading-overlay');
             setTimeout(() => {
                 overlay.classList.add('hidden');
                 overlay.classList.remove('flex');
-            }, 1000); // Delay dikit biar mulus
+            }, 1000);
         };
 
-        // DISQUS CONFIG
+        // 6. DISQUS
         var disqus_config = function () {
             this.page.url = window.location.href;  
             this.page.identifier = window.location.pathname; 
         };
         (function() { 
             var d = document, s = d.createElement('script');
-            s.src = 'https://mystream-anime.disqus.com/embed.js'; // Pastikan shortname sesuai
+            s.src = 'https://mystream-anime.disqus.com/embed.js';
             s.setAttribute('data-timestamp', +new Date());
             (d.head || d.body).appendChild(s);
         })();
