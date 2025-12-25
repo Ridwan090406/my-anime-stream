@@ -95,8 +95,9 @@ app.get('/detail/:slug', async (req, res) => {
 // 7. NONTON VIDEO
 app.get('/watch/:slug', async (req, res) => {
     const slug = req.params.slug;
+    const poster = req.query.poster; // Ambil poster dari query
     const data = await fetchAPI(`/anime/episode/${slug}`);
-    res.render('watch', { video: data });
+    res.render('watch', { video: data, poster: poster }); // Kirim poster ke EJS
 });
 
 // 8. AMBIL URL VIDEO PER SERVER
