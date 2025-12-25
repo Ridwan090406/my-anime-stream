@@ -130,7 +130,7 @@
     <script>
         // 1. DATA VIDEO (Diisi oleh Server EJS)
         const currentVideoData = {
-            id: "<%= video.animeId || video.title %>", // ID Unik
+            id: "<%= video.episodeId %>", // ID Unik
             title: "<%= video.title %>",
             poster: "<%= posterUrl %>",
             link: window.location.pathname, // Link halaman ini
