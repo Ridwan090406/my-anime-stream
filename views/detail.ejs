@@ -37,7 +37,7 @@
                     </h1>
 
                     <div class="flex flex-wrap gap-3 mb-6">
-                        <button id="btn-bookmark" onclick="toggleBookmark()" 
+                        <button id="btn-bookmark" 
                             class="relative overflow-hidden bg-cyber-card border border-cyber-border hover:border-neon-pink text-gray-300 hover:text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition duration-300 group shadow-lg">
                             <span class="group-hover:scale-125 transition duration-300 text-neon-pink">❤️</span> 
                             <span id="text-bookmark" class="font-semibold text-sm relative z-10">Favorit</span>
@@ -117,66 +117,44 @@
 
     <%- include('partials/footer') %>
 
+    <script src="/js/storage.js"></script>
     <script>
-        const animeData = {
-            id: "<%= anime.animeId %>", // Pastikan ID ini terisi dari controller
-            title: "<%= anime.title %>",
-            poster: "<%= anime.poster %>",
-            link: "/detail/<%= anime.animeId %>"
-        };
+        // Pastikan anime dan anime.animeId ada untuk mencegah error
+        <% if (anime && anime.animeId) { %>
+            const animeData = {
+                id: "<%= anime.animeId %>",
+                title: "<%= anime.title %>",
+                poster: "<%= anime.poster %>",
+                link: "/detail/<%= anime.animeId %>"
+            };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            checkBookmarkStatus();
-        });
-
-        function getBookmarks() {
-            return JSON.parse(localStorage.getItem('myStream_bookmarks')) || [];
-        }
-
-        function checkBookmarkStatus() {
-            const bookmarks = getBookmarks();
-            // Cek ID, jika animeId kosong (mungkin undefined di controller), gunakan Judul sebagai ID sementara
-            const currentId = animeData.id || animeData.title; 
-            
-            const isExist = bookmarks.some(item => item.id === currentId);
             const btn = document.getElementById('btn-bookmark');
             const txt = document.getElementById('text-bookmark');
 
-            if (isExist) {
-                btn.classList.add('border-neon-pink', 'bg-neon-pink/10');
-                btn.classList.remove('border-cyber-border');
-                btn.querySelector('span').classList.remove('text-neon-pink');
-                txt.innerText = "Hapus Favorit";
-                txt.classList.add('text-neon-pink');
-            } else {
-                btn.classList.remove('border-neon-pink', 'bg-neon-pink/10');
-                btn.classList.add('border-cyber-border');
-                btn.querySelector('span').classList.add('text-neon-pink');
-                txt.innerText = "Favorit";
-                txt.classList.remove('text-neon-pink');
+            function updateButtonState() {
+                // isBookmarked() dari storage.js
+                if (isBookmarked(animeData.id)) { 
+                    btn.classList.add('border-neon-pink', 'bg-neon-pink/10');
+                    txt.innerText = "Hapus Favorit";
+                    txt.classList.add('text-neon-pink');
+                } else {
+                    btn.classList.remove('border-neon-pink', 'bg-neon-pink/10');
+                    txt.innerText = "Favorit";
+                    txt.classList.remove('text-neon-pink');
+                }
             }
-        }
 
-        function toggleBookmark() {
-            let bookmarks = getBookmarks();
-            const currentId = animeData.id || animeData.title;
+            // Event listener untuk tombol utama
+            btn.addEventListener('click', () => {
+                toggleBookmark(animeData); // toggleBookmark() dari storage.js
+                updateButtonState();       // Perbarui tampilan tombol
+            });
 
-            const isExist = bookmarks.some(item => item.id === currentId);
-
-            if (isExist) {
-                bookmarks = bookmarks.filter(item => item.id !== currentId);
-            } else {
-                bookmarks.push({
-                    id: currentId,
-                    title: animeData.title,
-                    poster: animeData.poster,
-                    link: animeData.link || window.location.pathname,
-                    date: new Date().getTime()
-                });
-            }
-            localStorage.setItem('myStream_bookmarks', JSON.stringify(bookmarks));
-            checkBookmarkStatus();
-        }
+            // Panggil saat halaman pertama kali dimuat
+            document.addEventListener('DOMContentLoaded', () => {
+                updateButtonState();
+            });
+        <% } %>
     </script>
 </body>
 </html>

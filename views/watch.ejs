@@ -127,48 +127,23 @@
 
     <%- include('partials/footer') %>
 
+    <script src="/js/storage.js"></script>
     <script>
-        // 1. DATA VIDEO (Diisi oleh Server EJS)
-        const currentVideoData = {
-            id: "<%= video.episodeId %>", // ID Unik
-            title: "<%= video.title %>",
-            poster: "<%= posterUrl %>",
-            link: window.location.pathname, // Link halaman ini
-            date: new Date().toISOString() // Waktu sekarang
-        };
-
-        // 2. FUNGSI SIMPAN HISTORY (PENTING!!)
-        function saveToHistory() {
-            try {
-                // Ambil data lama
-                let history = JSON.parse(localStorage.getItem('myStream_history')) || [];
-
-                // Cek apakah video ini sudah ada? Kalau ada, hapus dulu (biar nanti ditaruh di paling atas/terbaru)
-                history = history.filter(item => item.id !== currentVideoData.id);
-
-                // Masukkan video ini ke urutan pertama (unshift)
-                history.unshift(currentVideoData);
-
-                // Batasi cuma simpan 50 riwayat terakhir (supaya HP gak berat)
-                if (history.length > 50) {
-                    history.pop();
-                }
-
-                // Simpan balik ke Browser
-                localStorage.setItem('myStream_history', JSON.stringify(history));
-                
-                console.log("✅ Riwayat tersimpan:", currentVideoData.title);
-            } catch (e) {
-                console.error("Gagal simpan history:", e);
-            }
-        }
-
-        // 3. JALANKAN SAAT HALAMAN SELESAI DIMUAT
+        // 1. SIMPAN HISTORY
         document.addEventListener('DOMContentLoaded', () => {
-            saveToHistory();
+            // Cek jika data video ada sebelum menyimpan
+            <% if (video && video.episodeId) { %>
+                const videoData = {
+                    id: "<%= video.episodeId %>",
+                    title: "<%= video.title || 'Tanpa Judul' %>",
+                    poster: "<%= posterUrl || '' %>",
+                    link: window.location.pathname
+                };
+                saveToHistory(videoData);
+            <% } %>
         });
 
-        // 4. SCRIPT GANTI SERVER (AJAX)
+        // 2. SCRIPT GANTI SERVER (AJAX)
         async function changeServer(serverId) {
             const iframe = document.getElementById('video-frame');
             const overlay = document.getElementById('loading-overlay');
@@ -177,7 +152,6 @@
             overlay.classList.add('flex');
             
             try {
-                // Minta link baru ke server kita sendiri (/get-stream)
                 const response = await fetch(`/get-stream/${serverId}`);
                 const data = await response.json();
                 
@@ -191,14 +165,13 @@
                 alert('Terjadi kesalahan saat ganti server.');
             }
 
-            // Simulasi loading
             setTimeout(() => {
                 overlay.classList.add('hidden');
                 overlay.classList.remove('flex');
             }, 1000);
         }
 
-        // 5. AUTO HIDE LOADING AWAL
+        // 3. AUTO HIDE LOADING AWAL
         const iframe = document.getElementById('video-frame');
         iframe.onload = function() {
             const overlay = document.getElementById('loading-overlay');
@@ -208,7 +181,7 @@
             }, 1000);
         };
 
-        // 6. DISQUS
+        // 4. DISQUS
         var disqus_config = function () {
             this.page.url = window.location.href;  
             this.page.identifier = window.location.pathname; 
